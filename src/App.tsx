@@ -1,5 +1,5 @@
-import { useReducer, useCallback, createContext, useContext } from 'react'
-import { AnimatePresence } from 'framer-motion'
+import { useReducer, useCallback, createContext, useContext, useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import type { Phase, ResolvedFlight, SessionData, MapStyle } from './types'
 import FlightGlobe from './components/FlightGlobe'
 import BoardingPass from './components/BoardingPass'
@@ -133,15 +133,7 @@ export default function App() {
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>
-      <div
-        className="relative w-full h-full overflow-hidden"
-        style={{
-          background: state.phase === 'BOARDING' || state.phase === 'LANDED'
-            ? 'var(--color-void)'
-            : 'transparent',
-          borderRadius: state.phase !== 'TAKEOFF' ? 14 : 0,
-        }}
-      >
+      <div className="relative w-full h-full overflow-hidden" style={{ background: 'var(--color-void)', borderRadius: 14 }}>
         <DragHandle />
         <AnimatePresence mode="wait">
           {state.phase === 'BROWSING' && <FlightGlobe key="globe" />}
@@ -165,16 +157,33 @@ export default function App() {
 }
 
 function DragHandle() {
+  const [hovered, setHovered] = useState(false)
+
   return (
     <div
-      className="absolute top-0 left-0 right-0 h-8 z-50 flex items-center justify-end pr-3"
+      className="absolute top-0 left-0 right-0 h-8 z-50 flex items-center justify-between px-3"
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
+      <div className="text-[9px] tracking-[3px] text-text-muted/40" style={{ fontFamily: 'var(--font-mono)' }}>
+        CLEARED
+      </div>
       <button
         onClick={() => window.electronAPI?.close()}
-        className="w-3 h-3 rounded-full bg-white/10 hover:bg-red-500/80 transition-colors"
-        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-      />
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className="w-3.5 h-3.5 rounded-full transition-all duration-200 flex items-center justify-center"
+        style={{
+          background: hovered ? 'rgba(220,38,38,0.8)' : 'rgba(255,255,255,0.08)',
+          WebkitAppRegion: 'no-drag',
+        } as React.CSSProperties}
+      >
+        {hovered && (
+          <svg width="6" height="6" viewBox="0 0 10 10" stroke="white" strokeWidth="1.5">
+            <line x1="2" y1="2" x2="8" y2="8" />
+            <line x1="8" y1="2" x2="2" y2="8" />
+          </svg>
+        )}
+      </button>
     </div>
   )
 }
